@@ -43,6 +43,8 @@ MQTT_KEEPALIVE_INTERVAL = 60
 
 # Number of frames that the detection holds if detection flickers
 DETECTION_HOLD_FRAMES = 5
+FONT = cv2.FONT_HERSHEY_COMPLEX
+COLOR = ()
 
 
 def build_argparser():
@@ -98,6 +100,8 @@ def infer_on_stream(args, client):
     """
     # Initialise the network class
     infer_network = Network()
+    # Set Probability threshold for detections
+    prob_threshold = args.prob_threshold
 
     ### TODO: Load the model through `infer_network` ###
     infer_network.load_model(model_xml=args.model, device=args.device, cpu_extension=args.cpu_extension)
@@ -113,7 +117,7 @@ def infer_on_stream(args, client):
     elif args.input.endswith('.mp4') or args.input.lower().endswith('.avi'):
         input_stream = args.input
     else:
-        log.warn("File type not supported: {}".format(args.input))
+        log.warn("File type not supported:", args.input)
         sys.exit("ERROR: unknown input file type!")
         
     # Get input shape of the network
@@ -227,21 +231,21 @@ def infer_on_stream(args, client):
             # Detection counter alert
             if person_counter > args.maximum_detections:
                 txt2 = "Alert! Maximum count of {} detections reached!".format(args.maximum_detections)
-                labelSize = cv2.getTextSize(txt2, cv2.FONT_HERSHEY_COMPLEX, 0.5, thickness=1)
+                labelSize = cv2.getTextSize(txt2, FONT, 0.5, thickness=1)
                 box_coords = ((10, frame.shape[0] - 30 + 2), 
                               (10 + labelSize[0][0], frame.shape[0] - 30 - labelSize[0][1] - 2))
                 cv2.rectangle(frame, box_coords[0], box_coords[1], (0, 0, 255), cv2.FILLED)
-                cv2.putText(frame, txt2, (10, frame.shape[0] - 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1)
+                cv2.putText(frame, txt2, (10, frame.shape[0] - 30), FONT, 0.5, (0, 0, 0), 1)
                 
            # Detection time alert (Hint: of course this only detects if persons are longer that a certain time 
            # in the frame, there is NO detection of how long each person is in the frame)
             if duration_seconds > args.maximum_time:
                 txt2 = "Alert! Maximum time of {}s attendance was reached!".format(args.maximum_time)
-                labelSize = cv2.getTextSize(txt2, cv2.FONT_HERSHEY_COMPLEX, 0.5, thickness=1)
+                labelSize = cv2.getTextSize(txt2, FONT, 0.5, thickness=1)
                 box_coords = ((10, frame.shape[0] - 10 + 2), 
                               (10 + labelSize[0][0], frame.shape[0] - 10 - labelSize[0][1] - 2))
                 cv2.rectangle(frame, box_coords[0], box_coords[1], (0, 215, 255), cv2.FILLED)
-                cv2.putText(frame, txt2, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1)
+                cv2.putText(frame, txt2, (10, frame.shape[0] - 10), FONT, 0.5, (0, 0, 0), 1)
 
            
         ### TODO: Send the frame to the FFMPEG server ###
@@ -295,13 +299,13 @@ def draw_boxes(frame, results, prob_threshold):
             
             # Add confidence label
             conf_message = "conf:{:.1f}".format(p)
-            labelSize = cv2.getTextSize(conf_message, cv2.FONT_HERSHEY_COMPLEX, 0.5, 2)
+            labelSize = cv2.getTextSize(conf_message, FONT, 0.5, 2)
             _x1 = xmax
-            _y1 = ymin+int(labelSize[0][1])
-            _x2 = xmax+labelSize[0][0]
+            _y1 = ymin + int(labelSize[0][1])
+            _x2 = xmax + labelSize[0][0]
             _y2 = ymin
-            cv2.rectangle(frame,(_x1,_y1),(_x2,_y2),(0,255,0),cv2.FILLED)
-            cv2.putText(frame,conf_message,(xmax,ymin+10),cv2.FONT_HERSHEY_COMPLEX,0.5,(0,0,0),1)
+            cv2.rectangle(frame, (_x1, _y1), (_x2, _y2), (0, 255, 0), cv2.FILLED)
+            cv2.putText(frame, conf_message, (xmax, ymin + 10), FONT, 0.5, (0, 0, 0), 1)
 
     return frame, int(current_box_count)
 
@@ -318,29 +322,29 @@ def decorate_meta_to_frame(frame, inference_duration, person_count_current, pers
     """
     # Tag the inference time 
     message_time = "Inference time: {:.1f}ms".format(inference_duration * 1000)
-    labelSize = cv2.getTextSize(message_time, cv2.FONT_HERSHEY_COMPLEX, 0.5, 2)
+    labelSize = cv2.getTextSize(message_time, FONT, 0.5, 2)
     cv2.rectangle(frame, (15, 20), (15 + labelSize[0][0], 15 - labelSize[0][1]), (0,255,0), cv2.FILLED)
-    cv2.putText(frame, message_time, (15, 15), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(frame, message_time, (15, 15), FONT, 0.5, (0, 0, 0), 1)
 
     # Tag the current count in frame
     message_current = "Count(current): {}".format(person_count_current)
-    labelSize = cv2.getTextSize(message_current, cv2.FONT_HERSHEY_COMPLEX, 0.5, 2)
+    labelSize = cv2.getTextSize(message_current, FONT, 0.5, 2)
     cv2.rectangle(frame, (15, 35), (15 + labelSize[0][0], 30 - labelSize[0][1]), (0,255,0), cv2.FILLED)
-    cv2.putText(frame, message_current, (15, 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(frame, message_current, (15, 30), FONT, 0.5, (0, 0, 0), 1)
 
     # Tag the total count
     message_total = "Count(total) {}".format(persons_count_total)
-    labelSize = cv2.getTextSize(message_total, cv2.FONT_HERSHEY_COMPLEX, 0.5, 2)
+    labelSize = cv2.getTextSize(message_total, FONT, 0.5, 2)
     cv2.rectangle(frame, (15, 50), (15 + labelSize[0][0], 45 - labelSize[0][1]), (0,255,0), cv2.FILLED)
-    cv2.putText(frame, message_total, (15, 47), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(frame, message_total, (15, 47), FONT, 0.5, (0, 0, 0), 1)
     
-    # Tag the total time detected
+    # Tag the total time detected, fix running duration for "zero persons"
     if person_count_current == 0:
         duration_current = 0
     message_duration = "Duration(in frame) {}s".format(duration_current)
-    labelSize = cv2.getTextSize(message_duration, cv2.FONT_HERSHEY_COMPLEX, 0.5, 2)
+    labelSize = cv2.getTextSize(message_duration, FONT, 0.5, 2)
     cv2.rectangle(frame, (15, 65), (15 + labelSize[0][0], 60 - labelSize[0][1]), (0,255,0), cv2.FILLED)
-    cv2.putText(frame, message_duration, (15, 63), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(frame, message_duration, (15, 63), FONT, 0.5, (0, 0, 0), 1)
     
     return frame
 
@@ -369,7 +373,6 @@ def main():
     # Log end
     log.info("[ SUCCESS ] Application finished!")
     
-
 
 if __name__ == '__main__':
     main()
