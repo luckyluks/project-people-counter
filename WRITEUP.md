@@ -27,11 +27,14 @@ To compare models before and after conversion to Intermediate Representations (I
 
 So I was only able to compare the model size before and after the conversion per model. Between converted IR models I could determine accuracy, inference time and model size.
 
-
- Name | Type | Size | Inference time | Accuracy
- --- | --- | --- | --- | ---
- s | s | s | s | s
- 1 | 2 | 3 | s | s
+This table show the result to compare the different models. For the IR model size only the binary file is listed here, since the XML file is comparatively small. For the inference time the unit is milliseconds (ms), benchmarked in the workspace environment. The accuracy is determined for how many pedestrians have been detected from the test video with **6** pedestrians, with a confindence of 60%. Lost frames are only quantified visually. 
+ Name | Type | Size (original) | Size (IR, binary) |Inference time [ms] | Accuracy | Lost frames
+ --- | --- | --- | --- | --- | --- | ---
+ Model1 | SSD MobileNetv2 | 67Mb | 65Mb | 70ms | 14oo6 | a lot of clearly identifiable
+ Model2 | SSDlite MobileNetv2 | 19Mb | 8.6Mb | 30ms | 17oo6 | a lot of clearly identifiable
+ Model3 | SSD300 VGG | 101Mb | 101Mb | 900ms | 7oo6 | some clearly identifiable
+ Model4 | F-RCNN Inception | 55Mb | 51Mb | - | 0oo6 | -
+ Model5 | person-detection-retail-0013 | - | 2.8Mb | 45ms | 6oo6 | negligible
 
 
 ## Assess Model Use Cases
@@ -104,7 +107,7 @@ In investigating potential people counter models, I tried each of the following 
   - The model was insufficient for the app because it was to heavy for the workspace and local environment. The inference time was so slow. But the accuracy was okay.
   - Again, I tried different input sizes and different confidence levels to fix the inference performance issue.
 
-- Model 4: F-RCMM Inception v2 COCO (Tensorflow)
+- Model 4: F-RCNN Inception v2 COCO (Tensorflow)
   - Model Source: [Download archive](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)
   - I converted the model using the Tensorflow procedure, as presented above.
   - The model was insufficient for the app because it produces a segmentation map and not an bounding box.
