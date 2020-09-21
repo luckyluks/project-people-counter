@@ -98,8 +98,6 @@ def infer_on_stream(args, client):
     """
     # Initialise the network class
     infer_network = Network()
-    # Set Probability threshold for detections
-    prob_threshold = args.prob_threshold
 
     ### TODO: Load the model through `infer_network` ###
     infer_network.load_model(model_xml=args.model, device=args.device, cpu_extension=args.cpu_extension)
@@ -115,7 +113,7 @@ def infer_on_stream(args, client):
     elif args.input.endswith('.mp4') or args.input.lower().endswith('.avi'):
         input_stream = args.input
     else:
-        log.warn("File type not supported:", args.input)
+        log.warn("File type not supported: {}".format(args.input))
         sys.exit("ERROR: unknown input file type!")
         
     # Get input shape of the network
