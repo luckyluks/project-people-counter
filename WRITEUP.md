@@ -1,31 +1,46 @@
 # Project Write-Up
 
-You can use this document as a template for providing your project write-up. However, if you
-have a different format you prefer, feel free to use it as long as you answer all required
-questions.
+This write-up is based on the template given in the course. It provides explanation of the model selection, model convertion and further questions.
 
 ## Explaining Custom Layers
 
-The process behind converting custom layers involves...
+The OpenVINO toolkit support various layer types of the compatible modelling frameworks (TensorFlow, Caffe, MXNet, Kaldi and ONYX). However, which layers are supported differs from framework to framework. A list of supported layers for each framework can be found [here](https://docs.openvinotoolkit.org/latest/openvino_docs_MO_DG_prepare_model_Supported_Frameworks_Layers.html).  
 
-Some of the potential reasons for handling custom layers are...
+Each layer that is not in this layer is classified as custom layer for the OpenVINO toolkit.
+Potential reasons for the use of custom layers are that they enable individual operations and manipulation of tensors if the operation is not natively supported in the framework or not supported in the OpenVINO toolkit. 
+
+OpenVINO supports handling of custom layers in the Model Optmizer and brings along tools for the conversion of custom layers. Therefore, following steps need to be implemented:
+- Generate the Extension Template Files Using the Model Extension Generator
+- Edit the Extractor and the Operation Extension Template File
+- Using Model Optimizer to Generate IR Files Containing the Custom Layer
+- Edit and Compile the Device Extension Template Files (CPU/GPU)
+- Execute the Model with the Custom Layer
+
+An example for this process is presented in [this repository](https://github.com/david-drew/OpenVINO-Custom-Layers/tree/master/2019.r2.0).  
+Besides this extension registering option, there is a second option to use custom layers in Caffee and Tensorflow. Both frameworks can be used installed locally to offload computations during inference.
 
 ## Comparing Model Performance
 
-My method(s) to compare models before and after conversion to Intermediate Representations
-were...
+During the project I downloaded and tested a couple of different modelsfor the application. I challenged myself to test different source frameworks, so I searched for models from the Tensorflow, Caffee and ONYX/Pytorch framework. 
 
-The difference between model accuracy pre- and post-conversion was...
+To compare models before and after conversion to Intermediate Representations (IR) it is in general possible to compare model size, model accuracy and inference time pre- and post-conversion. However, I could not find a way to determine accuracy and inference time of the pre-conversion models, since I only used the Udacity Jupyter Lab workspace to work on the project, besides some local testing on a weaker 6th generation laptop CPU.
 
-The size of the model pre- and post-conversion was...
+So I was only able to compare the model size before and after the conversion per model. Between converted IR models I could determine accuracy, inference time and model size.
 
-The inference time of the model pre- and post-conversion was...
+
+ Name | Type | Size | Inference time | Accuracy
+ --- | --- | --- | --- | ---
+ s | s | s | s | s
+ 1 | 2 | 3 | s | s
+
 
 ## Assess Model Use Cases
 
-Some of the potential use cases of the people counter app are...
+There are some potential used cases for the finished project, the people counter app:
+- During a pandemic, as the current COVID19 pandemic, the app could ensure that people follow the distance and hygiene regulations. Imagine an elevator, transport vehicle or similar small closed room is only allowed to be used if a maximum number of people is observed. For example, the control system then could forbid that doors are closing if the maximum number of peaple is exceeded.
+- Similar the app could be used to determine if pedestrians stop at certain situations in traffic, e.g. at a traffic sign. This could help to additionally warn the pedestrians or vehicles ariving to improve secure road passing.
+- The app could also be used to do something like AB testing with crowds. Imagine a shop wants to test if some advertisement or presentation in their shop window showcase is more attracting to pedestrians compared to others. Therefore the app could count stopping pedestrians per showcase and an AB comparison could help the store to improve their services.   
 
-Each of these use cases would be useful because...
 
 ## Assess Effects on End User Needs
 
@@ -34,26 +49,68 @@ deployed edge model. The potential effects of each of these are as follows...
 
 ## Model Research
 
-[This heading is only required if a suitable model was not found after trying out at least three
-different models. However, you may also use this heading to detail how you converted 
-a successful model.]
+Standard procedure for model research:
+1. Download the model archive with wget:
+    ```
+    wget [link to model archive]
+    ```
+2. Extract the archive with tar:
+    ```
+    tar -xvf [path to model archive]
+    ```
+3. Use the model optimizer to convert to the Intermediate Representation (IR):  
+    Use an environment variable for the model optimizer:
+    ```
+    export MO=/opt/intel/openvino/deployment_tools/model_optimizer/mo.py
+    ```
+    - if source framework was Tensorflow:
+        ```
+        $MO -input_model [model path].pb --tensorflow_object_detection_api_pipeline_config [pipeline path].config --tensorflow_use_custom_operations_config [support file path].json --reverse_input_channels 
+        ```
+    - if source framework was Caffee:
+        ```
+        $MO --input_model [model path].caffemodel --input_proto [model deploy file path].prototxt
+        ```
+    - if source framework was ONYX:
+        ```
+        $MO --input_model [model path].onnx
+        ```
+- Or use the directly by Intel supported models. Therefore use the model downloader. Available models can be explored with:
+    ```
+    /opt/intel/openvino/deployment_tools/tools/model_downloader/downloader.py --print-all
+    ```
+    Then use the downloader to download the model in all available or specific precision, f.e. name=person-detection-retail-0013 and precision=FP32.
+    ```
+    /opt/intel/openvino/deployment_tools/tools/model_downloader/downloader.py --name [model name] --precision [specific precision]
+    ```
 
 In investigating potential people counter models, I tried each of the following three models:
 
-- Model 1: [Name]
-  - [Model Source]
-  - I converted the model to an Intermediate Representation with the following arguments...
-  - The model was insufficient for the app because...
-  - I tried to improve the model for the app by...
+- Model 1: SSD MobileNet v2 COCO (Tensorflow)
+  - Model Source: [Download archive](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz)
+  - I converted the model using the Tensorflow procedure, as presented above.
+  - The model was insufficient for the app because the confidence on the persons in the video was to low, so in a lot of frames the persons could not be detected. 
+  - I tried different input sizes and different confidence levels.
   
-- Model 2: [Name]
-  - [Model Source]
-  - I converted the model to an Intermediate Representation with the following arguments...
-  - The model was insufficient for the app because...
-  - I tried to improve the model for the app by...
+- Model 2: SSD Lite MobileNet v2 COCO (Tensorflow)
+  - Model Source: [Download archive](http://download.tensorflow.org/models/object_detection/ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz)
+  - I converted the model using the Tensorflow procedure, as presented above.
+  - Similar result as Model 1, but with less performance used and shorter inference time.
+  - Again, I tried different input sizes and different confidence levels to fix the accuracy issue.
 
-- Model 3: [Name]
-  - [Model Source]
-  - I converted the model to an Intermediate Representation with the following arguments...
-  - The model was insufficient for the app because...
-  - I tried to improve the model for the app by...
+- Model 3: SSD 300 based on VGG (Caffee)
+  - Model Source: [Model site](https://docs.openvinotoolkit.org/latest/omz_models_public_ssd300_ssd300.html)
+  - I converted the model using the Caffee procedure, as presented above.
+  - The model was insufficient for the app because it was to heavy for the workspace and local environment. The inference time was so slow. But the accuracy was okay.
+  - Again, I tried different input sizes and different confidence levels to fix the inference performance issue.
+
+- Model 4: F-RCMM Inception v2 COCO (Tensorflow)
+  - Model Source: [Download archive](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)
+  - I converted the model using the Tensorflow procedure, as presented above.
+  - The model was insufficient for the app because it produces a segmentation map and not an bounding box.
+  - I tried to implent a box drawer from the segmentation map, but it was really slow and inefficient.
+
+- Model 5: person-detection-retail-0013 based on MobileNetV2-like (Intel)
+  - Model Source: [Model site](https://docs.openvinotoolkit.org/2019_R1/_person_detection_retail_0013_description_person_detection_retail_0013.html)
+  - I downloaded the model using the model downloader procedure, as presented above.
+  - The model had the best performance, no accuracy issues!
