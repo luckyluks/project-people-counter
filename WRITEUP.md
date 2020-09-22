@@ -38,7 +38,7 @@ This table show the result to compare the different models. For the IR model siz
 
  It can be clearly seen, that:
  - SSDlite fullfilled the expectation that it is lighter than SSD
- - SDD and SSDlite had unsatisfying performance regarding accuracy, f.e. the second person in the test video ```resources/Pedestrian_Detect_2_1_1.mp4``` was only detected in the first and last seconds of its appearance in the frame
+ - SDD and SSDlite had unsatisfying performance regarding accuracy, f.e. the second person in the test video [resources/Pedestrian_Detect_2_1_1.mp4](resources/Pedestrian_Detect_2_1_1.mp4) was only detected in the first and last seconds of its appearance in the frame
  - SSD300 performed better accuracy wise, but was unsatisfyable slow
  - F-RCNN models could not be implemented correctly
  - The intel model worked best and performed accurate and fast on the test video!
