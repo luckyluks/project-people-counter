@@ -36,6 +36,14 @@ This table show the result to compare the different models. For the IR model siz
  Model4 | F-RCNN Inception | 55Mb | 51Mb | - | 0oo6 | -
  Model5 | person-detection-retail-0013 | - | 2.8Mb | 45ms | 6oo6 | negligible
 
+ It can be clearly seen, that:
+ - SSDlite fullfilled the expectation that it is lighter than SSD
+ - SDD and SSDlite had unsatisfying performance regarding accuracy, f.e. the second person in the test video ```resources/Pedestrian_Detect_2_1_1.mp4``` was only detected in the first and last seconds of its appearance in the frame
+ - SSD300 performed better accuracy wise, but was unsatisfyable slow
+ - F-RCNN models could not be implemented correctly
+ - The intel model worked best and performed accurate and fast on the test video!
+
+
 
 ## Assess Model Use Cases
 
@@ -47,8 +55,13 @@ There are some potential used cases for the finished project, the people counter
 
 ## Assess Effects on End User Needs
 
-Lighting, model accuracy, and camera focal length/image size have different effects on a
-deployed edge model. The potential effects of each of these are as follows...
+The effects on end user needs of the following properties are discussed:
+- **lighting**: the lighthing of the camera scene that is captured is a important property to take care of. If the lighting is to weak then a camera can have problems with adapting in such way that the contrast is to weak to record shapes and colors correctly. And because this is what is needed to detect obejcts with a network, this would decrease the accuracy of the app. However, if lighting conditions can not be changed, then maybe training and using an infrared camera could help to tackle the problem.
+- **model accuracy**: Accuracy always come with a the trade-off, accuracy vs. ressources. So if you plan to have a high accuracy in detection than you have to use a powerful hardware. However, if you do not have enough budget for a powerful hardware than you have to deal with lower accuracy. But, it should be possible to use a lower accuracy with a strong tracking algorithm to get precise results in counting with basic hardware. This could be done with an identification of the objects and a memory which objects has been seen where in the frame.
+- **image size**: 
+
+
+Discuss lighting, model accuracy, and camera focal length/image size, and the effects these may have on an end user requirement.
 
 ## Model Research
 
