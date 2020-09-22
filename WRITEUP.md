@@ -43,6 +43,8 @@ This table show the result to compare the different models. For the IR model siz
  - F-RCNN models could not be implemented correctly
  - The intel model worked best and performed accurate and fast on the test video!
 
+Since this app is opposed to be deployed at the edge, the best choice of a model would be in general a fast model, since accurate models can be deployed in the cloud as well and the infrastructure there can better scale the performance to meet the requirements for an accurate model. However, in this specific application accuracy seems to be more important than speed, as long as an appropriate framerate can be achieved. In this application accuracy is so important, because no tracking was implemented so the detection has to be accurate, so people counts can be trusted. Speedwise, the framerate is the trade-off. The MQTT messaging should not be a problem, even if delayed with a slower network connection to the cloud.  
+**To sum up:** obviously a speed vs. accuracy trade-off, but I would prefer more accurate models if they can deliver a certain framerate!
 
 
 ## Assess Model Use Cases
