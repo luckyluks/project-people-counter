@@ -68,7 +68,7 @@ def build_argparser():
                              "CPU, GPU, FPGA or MYRIAD is acceptable. Sample "
                              "will look for a suitable plugin for device "
                              "specified (CPU by default)")
-    parser.add_argument("-pt", "--prob_threshold", type=float, default=0.5,
+    parser.add_argument("-pt", "--prob_threshold", type=float, default=0.6,
                         help="Probability threshold for detections filtering"
                         "(0.5 by default)")
     parser.add_argument("-md", "--maximum_detections", type=int, default=3,
