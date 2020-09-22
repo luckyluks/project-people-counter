@@ -1,10 +1,15 @@
 # Deploy a People Counter App at the Edge
 
+This repo is forked from the [Udacity starter template repo](https://github.com/udacity/nd131-openvino-fundamentals-project-starter) for the people counter app project in the Udacity Nanodegree Program "[Intel® Edge AI for IoT Developers](https://www.udacity.com/course/intel-edge-ai-for-iot-developers-nanodegree--nd131)".
+
+To keep this repo lightweight models files and npm files are excluded!
+
 | Details            |              |
 |-----------------------|---------------|
-| Programming Language: |  Python 3.5 or 3.6 |
+| Programming Language: |  Python 3.6 |
+| AI Frameworks used: |  OpenVINO™ 2019R3.1 |
 
-![people-counter-python](./images/people-counter-image.png)
+![people-counter-python](./images/screen_caputure_app.png)
 
 ## What it Does
 
@@ -14,7 +19,7 @@ The people counter application will demonstrate how to create a smart video IoT 
 
 The counter will use the Inference Engine included in the Intel® Distribution of OpenVINO™ Toolkit. The model used should be able to identify people in a video frame. The app should count the number of people in the current frame, the duration that a person is in the frame (time elapsed between entering and exiting a frame) and the total count of people. It then sends the data to a local web server using the Paho MQTT Python package.
 
-You will choose a model to use and convert it with the Model Optimizer.
+Models tested in this project are listed in the [write-up](./WRITEUP.md)
 
 ![architectural diagram](./images/arch_diagram.png)
 
@@ -83,13 +88,13 @@ From the main directory:
    npm install
    ```
 
-## What model to use
+<!-- ## What model to use
 
 It is up to you to decide on what model to use for the application. You need to find a model not already converted to Intermediate Representation format (i.e. not one of the Intel® Pre-Trained Models), convert it, and utilize the converted model in your application.
 
 Note that you may need to do additional processing of the output to handle incorrect detections, such as adjusting confidence threshold or accounting for 1-2 frames where the model fails to see a person already counted and would otherwise double count.
 
-**If you are otherwise unable to find a suitable model after attempting and successfully converting at least three other models**, you can document in your write-up what the models were, how you converted them, and why they failed, and then utilize any of the Intel® Pre-Trained Models that may perform better.
+**If you are otherwise unable to find a suitable model after attempting and successfully converting at least three other models**, you can document in your write-up what the models were, how you converted them, and why they failed, and then utilize any of the Intel® Pre-Trained Models that may perform better. -->
 
 ## Run the application
 
@@ -129,8 +134,6 @@ sudo ffserver -f ./ffmpeg/server.conf
 
 ### Step 4 - Run the code
 
-Open a new terminal to run the code. 
-
 #### Setup the environment
 
 You must configure the environment to use the Intel® Distribution of OpenVINO™ toolkit one time per session by running the following command:
@@ -139,6 +142,47 @@ source /opt/intel/openvino/bin/setupvars.sh -pyver 3.5
 ```
 
 You should also be able to run the application with Python 3.6, although newer versions of Python will not work with the app.
+
+#### Start the app
+
+Open a new terminal to run the code. Therefore following arguments can be used:
+```
+usage: main.py [-h] -m MODEL -i INPUT [-l CPU_EXTENSION] [-d DEVICE] [-pt PROB_THRESHOLD] [-md MAXIMUM_DETECTIONS]
+               [-mt MAXIMUM_TIME]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m MODEL, --model MODEL
+                        Path to an xml file with a trained model.
+  -i INPUT, --input INPUT
+                        Path to image or video file
+  -l CPU_EXTENSION, --cpu_extension CPU_EXTENSION
+                        MKLDNN (CPU)-targeted custom layers.Absolute path to a shared library with thekernels impl.
+  -d DEVICE, --device DEVICE
+                        Specify the target device to infer on: CPU, GPU, FPGA or MYRIAD is acceptable. Sample will look for a
+                        suitable plugin for device specified (CPU by default)
+  -pt PROB_THRESHOLD, --prob_threshold PROB_THRESHOLD
+                        Probability threshold for detections filtering(0.5 by default)
+  -md MAXIMUM_DETECTIONS, --maximum_detections MAXIMUM_DETECTIONS
+                        Maximum count of detections in the frame before a warning appears
+  -mt MAXIMUM_TIME, --maximum_time MAXIMUM_TIME
+                        Maximum time a detected person is in the frame before a warning appears (in seconds)
+```
+Additionally the output of the app has to be piped to the ffmpeg server with a "|" pipe.
+So, for example a run of a video file "resources/Pedestrian_Detect_2_1_1.mp4" with a model "model.xml", the standard Linux CPU extension and a probability threshold of 60% for bounding boxes kann be started with:
+```
+python main.py -m model.xml -i resources/Pedestrian_Detect_2_1_1.mp4 -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -pt 0.6 | ffmpeg -v warning -f rawvideo -pixel_format bgr24 -video_size 768x432 -framerate 24 -i - http://0.0.0.0:3004/fac.ffm
+```
+
+
+<!-- #### Setup the environment
+
+You must configure the environment to use the Intel® Distribution of OpenVINO™ toolkit one time per session by running the following command:
+```
+source /opt/intel/openvino/bin/setupvars.sh -pyver 3.5
+```
+
+You should also be able to run the application with Python 3.6, although newer versions of Python will not work with the app. -->
 
 #### Running on the CPU
 
@@ -183,7 +227,7 @@ To see the output on a web based interface, open the link [http://0.0.0.0:3004](
 **Note:**
 User has to give `-video_size` command line argument according to the input as it is used to specify the resolution of the video or image file.
 
-## A Note on Running Locally
+<!-- ## A Note on Running Locally
 
 The servers herein are configured to utilize the Udacity classroom workspace. As such,
 to run on your local machine, you will need to change the below file:
@@ -198,5 +242,5 @@ You can change each of these as follows:
 ```
 CAMERA_FEED_SERVER: "http://localhost:3004"
 ...
-MQTT_SERVER: "ws://localhost:3002"
+MQTT_SERVER: "ws://localhost:3002" -->
 ```
