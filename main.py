@@ -57,7 +57,8 @@ def build_argparser():
     parser.add_argument("-m", "--model", required=True, type=str,
                         help="Path to an xml file with a trained model.")
     parser.add_argument("-i", "--input", required=True, type=str,
-                        help="Path to image or video file")
+                        help="Path to image file OR video file OR camera "
+                             "stream. For stream use \"CAM\" as input!")
     parser.add_argument("-l", "--cpu_extension", required=False, type=str,
                         default=None,
                         help="MKLDNN (CPU)-targeted custom layers."
@@ -70,13 +71,16 @@ def build_argparser():
                              "specified (CPU by default)")
     parser.add_argument("-pt", "--prob_threshold", type=float, default=0.6,
                         help="Probability threshold for detections filtering"
-                        "(0.5 by default)")
+                             "(0.5 by default)")
     parser.add_argument("-md", "--maximum_detections", type=int, default=3,
                         help="Maximum count of detections in the frame "
-                        " before a warning appears")
+                             " before a warning appears")
     parser.add_argument("-mt", "--maximum_time", type=int, default=10,
                         help="Maximum time a detected person is in the frame"
-                        " before a warning appears (in seconds)")
+                             " before a warning appears (in seconds)")
+    parser.add_argument("-mr", "--maximum_requests", type=int, default=4,
+                        help="Maximum numer of requests that can be handled"
+                             " by the network at once (integer)")
     
     return parser
 
@@ -102,7 +106,10 @@ def infer_on_stream(args, client):
     infer_network = Network()
 
     ### TODO: Load the model through `infer_network` ###
-    infer_network.load_model(model_xml=args.model, device=args.device, cpu_extension=args.cpu_extension)
+    infer_network.load_model(model_xml=args.model, 
+                             device = args.device, 
+                             cpu_extension=args.cpu_extension, 
+                             num_requests=args.maximum_requests)
 
     ### TODO: Handle the input stream ###
     single_image_mode = False
@@ -140,7 +147,8 @@ def infer_on_stream(args, client):
     person_counter_prev = 0
     person_counter_total = 0
     duration_frames = 0
-    duration_frames_prev = 0    
+    duration_frames_prev = 0   
+    current_request_id = 0
 
     ### TODO: Loop until stream is over ###
     while cap.isOpened():
@@ -157,14 +165,14 @@ def infer_on_stream(args, client):
 
         ### TODO: Start asynchronous inference for specified request ###
         inference_start = time.time()
-        infer_network.exec_net(p_frame)
+        current_request_id, next_request_id = infer_network.exec_net(p_frame, current_request_id)
 
         ### TODO: Wait for the result ###
-        if infer_network.wait() == 0:
+        if infer_network.wait(current_request_id) == 0:
             
             ### TODO: Get the results of the inference request ###
             inference_stop = time.time() - inference_start
-            net_output = infer_network.get_output()            
+            net_output = infer_network.get_output(current_request_id)            
             
             ## TODO: Extract any desired stats from the results ###
             frame, persons_current_count = draw_boxes(frame,
@@ -252,8 +260,14 @@ def infer_on_stream(args, client):
 
         ### TODO: Write an output image if `single_image_mode` ###
         if single_image_mode:
-            cv2.imwrite('out_image.jpg', frame)
-
+            filename_out = '{}/out_{}'.format(os.path.dirname(input_stream), os.path.basename(input_stream))
+            cv2.imwrite(filename_out, frame)
+            log.info("Saved output file: {}".format(filename_out))
+        
+        # Rotate request id
+        current_request_id = next_request_id
+       
+        
         # Break loop if key pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

@@ -44,14 +44,15 @@ class Network:
         self.input_blob = None
         self.output_blob = None
         self.exec_network = None
-        self.infer_request = None
+        self.num_requests = None
 
-    def load_model(self, model_xml, device="CPU", cpu_extension=None):
+    def load_model(self, model_xml, device="CPU", cpu_extension=None, num_requests=4):
         """
         Load the model given IR files on the device and add extensions
         :param model_xml: the path to the model XML file
         :param device: the desired device for the inference, CPU is default
         :param cpu_extension: the cpu extension file, if CPU is selected as device
+        :param num_requests: the number of requests, that can be handled asynchronously 
         """
         ### TODO: Load the model ###
         ### TODO: Check for supported layers ###
@@ -66,6 +67,7 @@ class Network:
 
         # Initialize the plugin
         self.plugin = IECore()
+        self.num_requests = num_requests
 
         # Add a CPU extension, if applicable
         if cpu_extension and "CPU" in device:
@@ -85,7 +87,7 @@ class Network:
             sys.exit("ERROR: unsupported layers found!")
 
         # Load the IENetwork into the plugin
-        self.exec_network = self.plugin.load_network(self.network, device)
+        self.exec_network = self.plugin.load_network(self.network, device, num_requests=num_requests)
 
         # Get the input layer
         self.input_blob = next(iter(self.network.inputs))
@@ -112,23 +114,28 @@ class Network:
         ### TODO: Return the shape of the input layer ###
         return self.network.outputs[self.output_blob].shape
 
-    def exec_net(self, image, request_id=0):
+    def exec_net(self, image, request_id):
         """
-        Starts an asynchronous inference request
+        Starts an asynchronous inference request with the given request id
         :param image: the input image
-        :param request_id: an optional request id that is given in the request, default is "0"
+        :param request_id: the request id to use for the request
+        :return request_id: the used request id
+        :return next_request_id: a follow up request id
         """
         ### TODO: Start an asynchronous request ###
         ### TODO: Return any necessary information ###
         ### Note: You may need to update the function parameters. ###
-        self.infer_request = self.exec_network.start_async(request_id=request_id, inputs={self.input_blob: image})
-        return
+        self.exec_network.start_async(request_id=request_id, inputs={self.input_blob: image})
+        
+        # Generate next request id (must be in range of num_requests, otherwise will be an "incorrect id")
+        next_request_id = (request_id + 1) % self.num_requests
+        return request_id, next_request_id
     
 
-    def wait(self, request_id=0):
+    def wait(self, request_id):
         """
         Waits until the inference request for the given request_id is finished
-        :param request_id: the request id that is given in the request, default is "0"
+        :param request_id: the request id that is given in the request
         :return: the status of the processed request
         """
         ### TODO: Wait for the request to be complete. ###
@@ -138,10 +145,10 @@ class Network:
         return status
         
         
-    def get_output(self, request_id=0):
+    def get_output(self, request_id):
         """
         Returns the extracted output for the given request_id
-        :param request_id: the request id that is given in the request, default is "0"
+        :param request_id: the request id that is given in the request
         :return: the extracted output for the given request_id
         """
         ### TODO: Extract and return the output results
